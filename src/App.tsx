@@ -96,6 +96,7 @@ function App() {
   const [network, setNetwork] = useState<Network | null>(null)
   const [networkError, setNetworkError] = useState<string | null>(null)
   const [showMobileWarning, setShowMobileWarning] = useState(true)
+  const [isSidebarHidden, setIsSidebarHidden] = useState(false)
   const [search, setSearch] = useState('')
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
@@ -273,7 +274,7 @@ function App() {
 
   if (networkError) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#e0e0e0', background: '#111', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', color: '#e0e0e0', background: '#111', flexDirection: 'column', gap: '12px' }}>
         <div style={{ fontSize: '1.1rem' }}>Failed to load network data</div>
         <div style={{ color: '#888', fontSize: '0.85rem' }}>{networkError}</div>
       </div>
@@ -282,43 +283,53 @@ function App() {
 
   if (!network) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#72bf44', background: '#111', fontSize: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', color: '#72bf44', background: '#111', fontSize: '1rem' }}>
         Loading network…
       </div>
     )
   }
 
   return (
-    <div className="app-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div className="app-container">
       {showMobileWarning && (
         <div className="mobile-warning" role="status" aria-live="polite">
-          <span>This page is not optimized for small screens yet. For best experience, use a larger display.</span>
+          <span>This page is not optimized for small screens yet. For best experience, rotate to landscape or use a larger display.</span>
           <button className="mobile-warning-close" onClick={dismissMobileWarning} aria-label="Dismiss mobile warning">
             ×
           </button>
         </div>
       )}
-      <div style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
-        <Sidebar 
-          search={search}
-          onSearchChange={handleSearch}
-          searchResults={searchResults}
-          cityHoverDetails={cityHoverDetails}
-          filteredRoutes={filteredRoutes}
-          selectedRoute={selectedRoute}
-          selectedCity={selectedCity}
-          cityStops={cityStops}
-          selectedCountry={selectedCountry}
-          selectedStationId={selectedStationId}
-          onSelectRoute={handleSelectRoute}
-          onSelectCity={handleSelectCity}
-          onSelectCountry={handleSelectCountry}
-          onSelectStation={handleSelectStation}
-          onHoverRoute={setHoveredRoute}
-          onHoverCity={setHoveredCity}
-          onHoverStation={setHoveredStationId}
-          stopsMap={network.stops}
-        />
+      <div className={`app-main ${isSidebarHidden ? 'sidebar-hidden' : ''}`}>
+        <button
+          className={`sidebar-toggle-button ${isSidebarHidden ? 'collapsed' : 'expanded'}`}
+          onClick={() => setIsSidebarHidden((prev) => !prev)}
+          aria-label={isSidebarHidden ? 'Show sidebar' : 'Hide sidebar'}
+          title={isSidebarHidden ? 'Show sidebar' : 'Hide sidebar'}
+        >
+          {isSidebarHidden ? '☰' : '❮'}
+        </button>
+        {!isSidebarHidden && (
+          <Sidebar 
+            search={search}
+            onSearchChange={handleSearch}
+            searchResults={searchResults}
+            cityHoverDetails={cityHoverDetails}
+            filteredRoutes={filteredRoutes}
+            selectedRoute={selectedRoute}
+            selectedCity={selectedCity}
+            cityStops={cityStops}
+            selectedCountry={selectedCountry}
+            selectedStationId={selectedStationId}
+            onSelectRoute={handleSelectRoute}
+            onSelectCity={handleSelectCity}
+            onSelectCountry={handleSelectCountry}
+            onSelectStation={handleSelectStation}
+            onHoverRoute={setHoveredRoute}
+            onHoverCity={setHoveredCity}
+            onHoverStation={setHoveredStationId}
+            stopsMap={network.stops}
+          />
+        )}
         <div className="map-container">
           <RoutesMap 
             routes={filteredRoutes}
@@ -326,6 +337,7 @@ function App() {
             hoveredRoute={hoveredRoute}
             hoveredStopId={hoveredStationId}
             hoveredCityStopIds={hoveredCityStopIds}
+            sidebarHidden={isSidebarHidden}
             stopsMap={network.stops}
             onSelectRoute={handleSelectRoute}
             onSelectStop={handleSelectStation}

@@ -11,17 +11,40 @@ body, html {
   width: 100%;
   height: 100%;
   background-color: #121212;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 #root {
   width: 100%;
   height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
 }
 
 .app-container {
   display: flex;
+  flex-direction: column;
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.app-main {
+  display: flex;
+  flex-grow: 1;
+  overflow: hidden;
+  position: relative;
+  --sidebar-width: 400px;
+}
+
+.app-main.sidebar-hidden {
+  --sidebar-width: 0px;
 }
 
 .sidebar {
@@ -96,6 +119,7 @@ body, html {
   flex-grow: 1;
   height: 100%;
   background: #242424;
+  position: relative;
 }
 
 .search-results {
@@ -183,6 +207,42 @@ body, html {
   font-size: 0.9rem;
 }
 
+.sidebar-toggle-button {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #72bf44;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.sidebar-toggle-button:hover {
+  background: #333;
+}
+
+.sidebar-toggle-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: calc(var(--sidebar-width) - 14px);
+  z-index: 1000;
+}
+
+.sidebar-toggle-button.collapsed {
+  top: 12px;
+  transform: none;
+}
+
+.app-main.sidebar-hidden .sidebar-toggle-button {
+  left: 12px;
+}
+
 .route-card,
 .search-item,
 .stop-item,
@@ -221,6 +281,33 @@ body, html {
 @media (max-width: 900px) {
   .mobile-warning {
     display: flex;
+  }
+
+  .sidebar {
+    width: 320px;
+  }
+
+  .app-main {
+    --sidebar-width: 320px;
+  }
+
+  .sidebar-header {
+    padding: 14px;
+  }
+
+  .route-card {
+    padding: 12px 14px;
+  }
+
+  .route-name {
+    font-size: 0.82rem;
+  }
+
+  .route-details,
+  .search-item,
+  .back-button,
+  .stop-name {
+    font-size: 0.78rem;
   }
 }
 

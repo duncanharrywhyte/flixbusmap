@@ -20,6 +20,7 @@ interface MapProps {
   hoveredRoute: Route | null;
   hoveredStopId: string | null;
   hoveredCityStopIds: Set<string>;
+  sidebarHidden: boolean;
   stopsMap: { [id: string]: Stop };
   onSelectRoute: (route: Route | null) => void;
   onSelectStop: (id: string) => void;
@@ -27,8 +28,16 @@ interface MapProps {
   onHoverStop: (id: string | null) => void;
 }
 
-const MapEffect: React.FC<{ selectedRoute: Route | null, stopsMap: { [id: string]: Stop } }> = ({ selectedRoute, stopsMap }) => {
+const MapEffect: React.FC<{ selectedRoute: Route | null, stopsMap: { [id: string]: Stop }, sidebarHidden: boolean }> = ({ selectedRoute, stopsMap, sidebarHidden }) => {
   const map = useMap();
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      map.invalidateSize({ pan: false, animate: false });
+    }, 60);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [sidebarHidden, map]);
   
   useEffect(() => {
     if (selectedRoute && selectedRoute.stops.length > 0) {
@@ -39,7 +48,17 @@ const MapEffect: React.FC<{ selectedRoute: Route | null, stopsMap: { [id: string
       
       if (points.length > 0) {
         const bounds = L.latLngBounds(points);
-        map.fitBounds(bounds, { padding: [120, 120] });
+        const isMobileViewport = typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches;
+        if (isMobileViewport) {
+          const targetZoom = Math.max(map.getBoundsZoom(bounds, false, L.point(80, 80)) - 0.35, 3.6);
+          map.setView(bounds.getCenter(), targetZoom, { animate: false });
+        } else {
+          map.fitBounds(bounds, {
+            padding: [120, 120],
+            maxZoom: 9,
+            animate: false
+          });
+        }
       }
     }
   }, [selectedRoute, stopsMap, map]);
@@ -47,7 +66,7 @@ const MapEffect: React.FC<{ selectedRoute: Route | null, stopsMap: { [id: string
   return null;
 }
 
-const Map: React.FC<MapProps> = ({ routes, selectedRoute, hoveredRoute, hoveredStopId, hoveredCityStopIds, stopsMap, onSelectRoute, onSelectStop, onHoverRoute, onHoverStop }) => {
+const Map: React.FC<MapProps> = ({ routes, selectedRoute, hoveredRoute, hoveredStopId, hoveredCityStopIds, sidebarHidden, stopsMap, onSelectRoute, onSelectStop, onHoverRoute, onHoverStop }) => {
   return (
     <MapContainer 
       center={[50.0, 10.0]} 
@@ -58,7 +77,12 @@ const Map: React.FC<MapProps> = ({ routes, selectedRoute, hoveredRoute, hoveredS
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+        opacity={1}
+      />
+      <TileLayer
+        url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+        opacity={0.6}
       />
       
       {routes.map((route, index) => {
@@ -161,7 +185,7 @@ const Map: React.FC<MapProps> = ({ routes, selectedRoute, hoveredRoute, hoveredS
         </Marker>
       )}
 
-      <MapEffect selectedRoute={selectedRoute} stopsMap={stopsMap} />
+      <MapEffect selectedRoute={selectedRoute} stopsMap={stopsMap} sidebarHidden={sidebarHidden} />
     </MapContainer>
   );
 };
