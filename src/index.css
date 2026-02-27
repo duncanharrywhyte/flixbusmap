@@ -192,6 +192,38 @@ body, html {
   -webkit-user-select: none;
 }
 
+.mobile-warning {
+  display: none;
+  background: #2a2a2a;
+  border-bottom: 1px solid #444;
+  color: #ffd166;
+  font-size: 0.85rem;
+  padding: 10px 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mobile-warning-close {
+  background: transparent;
+  border: none;
+  color: #ffd166;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.mobile-warning-close:hover {
+  color: #ffe0a0;
+}
+
+@media (max-width: 900px) {
+  .mobile-warning {
+    display: flex;
+  }
+}
+
 .leaflet-container:focus,
 .leaflet-container:focus-visible,
 .leaflet-interactive:focus,

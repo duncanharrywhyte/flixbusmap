@@ -92,8 +92,10 @@ function buildCityHoverDetails(network: Network, canonicalCityByRaw: Map<string,
 }
 
 function App() {
+  const MOBILE_WARNING_DISMISSED_KEY = 'mobile-warning-dismissed'
   const [network, setNetwork] = useState<Network | null>(null)
   const [networkError, setNetworkError] = useState<string | null>(null)
+  const [showMobileWarning, setShowMobileWarning] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
@@ -109,6 +111,19 @@ function App() {
       .then((data: Network) => setNetwork(data))
       .catch(e => setNetworkError(e.message))
   }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const dismissed = window.sessionStorage.getItem(MOBILE_WARNING_DISMISSED_KEY) === '1'
+    if (dismissed) setShowMobileWarning(false)
+  }, [])
+
+  const dismissMobileWarning = () => {
+    setShowMobileWarning(false)
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(MOBILE_WARNING_DISMISSED_KEY, '1')
+    }
+  }
 
   const canonicalCityByRaw = useMemo(() => {
     if (!network) return new Map<string, string>()
@@ -275,6 +290,14 @@ function App() {
 
   return (
     <div className="app-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      {showMobileWarning && (
+        <div className="mobile-warning" role="status" aria-live="polite">
+          <span>This page is not optimized for small screens yet. For best experience, use a larger display.</span>
+          <button className="mobile-warning-close" onClick={dismissMobileWarning} aria-label="Dismiss mobile warning">
+            ×
+          </button>
+        </div>
+      )}
       <div style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
         <Sidebar 
           search={search}
