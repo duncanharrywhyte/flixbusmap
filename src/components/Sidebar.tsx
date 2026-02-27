@@ -42,8 +42,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h1>FlixBus Explorer</h1>
-        
         {(!selectedRoute && !isFiltering) ? (
           <div style={{ position: 'relative' }}>
             <Search 

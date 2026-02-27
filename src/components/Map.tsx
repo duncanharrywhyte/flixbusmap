@@ -62,21 +62,33 @@ const Map: React.FC<MapProps> = ({ routes, selectedRoute, stopsMap, onSelectRout
         if (positions.length < 2) return null;
 
         const isSelected = selectedRoute?.id === route.id;
+        const routeKey = `${route.id}-${route.stops[0] || ''}-${route.stops[route.stops.length - 1] || ''}-${route.stops.length}-${index}`;
 
         return (
-          <Polyline 
-            key={`${route.id}-${route.stops[0] || ''}-${route.stops[route.stops.length - 1] || ''}-${route.stops.length}-${index}`}
-            positions={positions}
-            eventHandlers={{
+          <React.Fragment key={routeKey}>
+            <Polyline
+              positions={positions}
+              eventHandlers={{
                 click: () => onSelectRoute(route)
-            }}
-            pathOptions={{ 
-              color: '#72bf44',
-              weight: isSelected ? 7 : (selectedRoute ? 1 : 2.5),
-              opacity: isSelected ? 1 : (selectedRoute ? 0.15 : 0.5),
-              lineJoin: 'round'
-            }}
-          />
+              }}
+              pathOptions={{
+                color: '#72bf44',
+                weight: isSelected ? 16 : 12,
+                opacity: 0.01,
+                lineJoin: 'round'
+              }}
+            />
+            <Polyline
+              positions={positions}
+              interactive={false}
+              pathOptions={{
+                color: '#72bf44',
+                weight: isSelected ? 6 : (selectedRoute ? 0.8 : 2.2),
+                opacity: isSelected ? 1 : (selectedRoute ? 0.15 : 0.5),
+                lineJoin: 'round'
+              }}
+            />
+          </React.Fragment>
         );
       })}
 
