@@ -36,3 +36,4 @@ gtfs_gb/
 src/vite-env.d.ts
 deploy/nginx-front-dwhyte.com.conf
 deploy/nginx-flixbus-origin.conf
+serve_dist.py
