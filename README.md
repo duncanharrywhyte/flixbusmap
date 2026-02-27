@@ -127,3 +127,7 @@ public/
   flixbus_network.json
 process_gtfs.js
 ```
+
+## Authors
+
+Made by Duncan Harry Whyte, with great help from Github Copilot.
