@@ -51,12 +51,18 @@ const MapEffect: React.FC<{ selectedRoute: Route | null, stopsMap: { [id: string
         const isMobileViewport = typeof window !== 'undefined' && window.matchMedia('(max-width: 900px)').matches;
         if (isMobileViewport) {
           const targetZoom = Math.max(map.getBoundsZoom(bounds, false, L.point(80, 80)) - 0.35, 3.6);
-          map.setView(bounds.getCenter(), targetZoom, { animate: false });
+          map.setView(bounds.getCenter(), targetZoom, {
+            animate: true,
+            duration: 0.8,
+            easeLinearity: 0.2
+          });
         } else {
           map.fitBounds(bounds, {
             padding: [120, 120],
             maxZoom: 9,
-            animate: false
+            animate: true,
+            duration: 0.8,
+            easeLinearity: 0.2
           });
         }
       }
