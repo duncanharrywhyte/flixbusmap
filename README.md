@@ -130,4 +130,5 @@ process_gtfs.js
 
 ## Authors
 
-Made by Duncan Harry Whyte, with great help from Github Copilot.
+This was an experiment to see how much Github Copilot improved and how far I could take it. Almost all the code was written by agentic AI.
+Human author Duncan Harry Whyte.
