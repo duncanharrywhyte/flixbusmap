@@ -4,7 +4,19 @@ import Sidebar from './components/Sidebar'
 import { Network, Route } from './types'
 
 function cleanCityLabel(city: string) {
-  return city.replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim()
+  const normalized = city.replace(/\s+/g, ' ').trim()
+  const regionTagMatch = normalized.match(/\(([A-Z]{2,3})\)\s*$/)
+  const regionTag = regionTagMatch ? ` (${regionTagMatch[1]})` : ''
+  const withoutRegionTag = regionTagMatch
+    ? normalized.replace(/\s*\([A-Z]{2,3}\)\s*$/, '')
+    : normalized
+
+  const base = withoutRegionTag.replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim()
+  return `${base}${regionTag}`.trim()
+}
+
+function hasRegionTag(city: string) {
+  return /\([A-Z]{2,3}\)$/.test(city)
 }
 
 function buildCanonicalCityMap(network: Network) {
@@ -22,6 +34,8 @@ function buildCanonicalCityMap(network: Network) {
       if (candidate === cleaned) continue
       // Avoid overly short/generic prefixes like "San".
       if (candidate.length < 5) continue
+      // Keep explicitly region-tagged cities distinct (e.g. Amsterdam vs Amsterdam (NA)).
+      if (hasRegionTag(cleaned) || hasRegionTag(candidate)) continue
 
       const candidateLower = candidate.toLowerCase()
       if (cleanedLower.startsWith(`${candidateLower} `)) {
@@ -85,6 +99,9 @@ function App() {
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null)
+  const [hoveredRoute, setHoveredRoute] = useState<Route | null>(null)
+  const [hoveredCity, setHoveredCity] = useState<string | null>(null)
+  const [hoveredStationId, setHoveredStationId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}flixbus_network.json`)
@@ -117,6 +134,9 @@ function App() {
       setSelectedStationId(null)
     }
     setSelectedRoute(route);
+    setHoveredRoute(null)
+    setHoveredCity(null)
+    setHoveredStationId(null)
   }
 
   const clearFilters = () => {
@@ -124,6 +144,9 @@ function App() {
     setSelectedCountry(null);
     setSelectedStationId(null);
     setSelectedRoute(null);
+    setHoveredRoute(null)
+    setHoveredCity(null)
+    setHoveredStationId(null)
   }
 
   const handleSelectCity = (city: string | null) => {
@@ -196,13 +219,42 @@ function App() {
       routes = routes.filter(r => r.stops.some(sid => network.stops[sid].country === selectedCountry));
     }
 
-    return routes;
+    const seen = new Set<string>()
+    const deduped: Route[] = []
+
+    routes.forEach((route) => {
+      const signature = `${route.id}|${route.stops.join('>')}`
+      if (seen.has(signature)) return
+      seen.add(signature)
+      deduped.push(route)
+    })
+
+    return deduped;
   }, [network, selectedCity, selectedCountry, selectedStationId, canonicalCityByRaw]);
+
+  useEffect(() => {
+    if (selectedRoute && !filteredRoutes.includes(selectedRoute)) {
+      setSelectedRoute(null)
+    }
+
+    if (hoveredRoute && !filteredRoutes.includes(hoveredRoute)) {
+      setHoveredRoute(null)
+    }
+  }, [filteredRoutes, selectedRoute, hoveredRoute])
 
   const cityStops = useMemo(() => {
     if (!network || !selectedCity) return [];
     return Object.values(network.stops).filter(s => (canonicalCityByRaw.get(s.city) || cleanCityLabel(s.city)) === selectedCity);
   }, [network, selectedCity, canonicalCityByRaw]);
+
+  const hoveredCityStopIds = useMemo(() => {
+    if (!network || !hoveredCity) return new Set<string>();
+    return new Set(
+      Object.values(network.stops)
+        .filter(s => (canonicalCityByRaw.get(s.city) || cleanCityLabel(s.city)) === hoveredCity)
+        .map(s => s.id)
+    );
+  }, [network, hoveredCity, canonicalCityByRaw]);
 
   if (networkError) {
     return (
@@ -239,15 +291,23 @@ function App() {
           onSelectCity={handleSelectCity}
           onSelectCountry={handleSelectCountry}
           onSelectStation={handleSelectStation}
+          onHoverRoute={setHoveredRoute}
+          onHoverCity={setHoveredCity}
+          onHoverStation={setHoveredStationId}
           stopsMap={network.stops}
         />
         <div className="map-container">
           <RoutesMap 
             routes={filteredRoutes}
             selectedRoute={selectedRoute}
+            hoveredRoute={hoveredRoute}
+            hoveredStopId={hoveredStationId}
+            hoveredCityStopIds={hoveredCityStopIds}
             stopsMap={network.stops}
             onSelectRoute={handleSelectRoute}
             onSelectStop={handleSelectStation}
+            onHoverRoute={setHoveredRoute}
+            onHoverStop={setHoveredStationId}
           />
         </div>
       </div>

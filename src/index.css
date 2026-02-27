@@ -32,6 +32,8 @@ body, html {
   display: flex;
   flex-direction: column;
   color: #e0e0e0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .sidebar-header {
@@ -53,6 +55,8 @@ body, html {
   background: #2a2a2a;
   color: white;
   box-sizing: border-box;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .sidebar-content {
@@ -177,4 +181,23 @@ body, html {
   align-items: center;
   gap: 5px;
   font-size: 0.9rem;
+}
+
+.route-card,
+.search-item,
+.stop-item,
+.back-button,
+.section-title {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.leaflet-container:focus,
+.leaflet-container:focus-visible,
+.leaflet-interactive:focus,
+.leaflet-interactive:focus-visible,
+.map-container:focus,
+.map-container:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }

@@ -17,6 +17,9 @@ interface SidebarProps {
   onSelectCity: (city: string | null) => void;
   onSelectCountry: (country: string | null) => void;
   onSelectStation: (id: string | null) => void;
+  onHoverRoute: (route: Route | null) => void;
+  onHoverCity: (city: string | null) => void;
+  onHoverStation: (id: string | null) => void;
   stopsMap: { [id: string]: Stop };
 }
 
@@ -35,6 +38,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSelectCity,
   onSelectCountry,
   onSelectStation,
+  onHoverRoute,
+  onHoverCity,
+  onHoverStation,
   stopsMap
 }) => {
   const isFiltering = selectedCity || selectedCountry || selectedStationId;
@@ -99,7 +105,14 @@ const Sidebar: React.FC<SidebarProps> = ({
               <div className="search-section">
                 <div className="section-title">Cities</div>
                 {searchResults.cities.map(c => (
-                  <div key={c} className="search-item" title={cityHoverDetails.get(c)} onClick={() => onSelectCity(c)}>
+                  <div
+                    key={c}
+                    className="search-item"
+                    title={cityHoverDetails.get(c)}
+                    onMouseEnter={() => onHoverCity(c)}
+                    onMouseLeave={() => onHoverCity(null)}
+                    onClick={() => onSelectCity(c)}
+                  >
                     <MapIcon size={14} /> {c}
                   </div>
                 ))}
@@ -109,7 +122,13 @@ const Sidebar: React.FC<SidebarProps> = ({
               <div className="search-section">
                 <div className="section-title">Stations</div>
                 {searchResults.stations.map(s => (
-                  <div key={s.id} className="search-item" onClick={() => onSelectStation(s.id)}>
+                  <div
+                    key={s.id}
+                    className="search-item"
+                    onMouseEnter={() => onHoverStation(s.id)}
+                    onMouseLeave={() => onHoverStation(null)}
+                    onClick={() => onSelectStation(s.id)}
+                  >
                     <MapPin size={14} /> {s.name}
                   </div>
                 ))}
@@ -126,6 +145,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                 key={stop.id} 
                 className="search-item" 
                 style={{ fontSize: '0.8rem' }}
+                onMouseEnter={() => onHoverStation(stop.id)}
+                onMouseLeave={() => onHoverStation(null)}
                 onClick={() => onSelectStation(stop.id)}
               >
                 <MapPin size={12} /> {stop.name}
@@ -147,6 +168,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div 
                   key={`${route.id}-${route.stops[0] || ''}-${route.stops[route.stops.length - 1] || ''}-${route.stops.length}`}
                   className="route-card"
+                  onMouseEnter={() => onHoverRoute(route)}
+                  onMouseLeave={() => onHoverRoute(null)}
                   onClick={() => onSelectRoute(route)}
                 >
                   <div className="route-name">
@@ -175,6 +198,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                   key={stopId} 
                   className="stop-item" 
                   style={{ padding: '10px 20px', cursor: 'pointer' }}
+                  onMouseEnter={() => onHoverStation(stopId)}
+                  onMouseLeave={() => onHoverStation(null)}
                   onClick={() => onSelectStation(stopId)}
                 >
                   <div className="stop-dot"></div>

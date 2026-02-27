@@ -3,10 +3,13 @@ import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-
 import { Route, Stop } from '../types'
 import L from 'leaflet'
 
+const FLIX_GREEN = '#72bf44'
+const HOVER_HIGHLIGHT = '#ffd166'
+
 // Custom dot icon for stops
-const dotIcon = (selected: boolean) => new L.DivIcon({
+const dotIcon = (isHovered: boolean) => new L.DivIcon({
   className: 'custom-div-icon',
-  html: `<div style="background-color:${selected ? '#72bf44' : '#666'}; width:8px; height:8px; border-radius:50%; border:1px solid white;"></div>`,
+  html: `<div style="background-color:${isHovered ? HOVER_HIGHLIGHT : FLIX_GREEN}; width:8px; height:8px; border-radius:50%; border:1px solid white;"></div>`,
   iconSize: [8, 8],
   iconAnchor: [4, 4]
 });
@@ -14,9 +17,14 @@ const dotIcon = (selected: boolean) => new L.DivIcon({
 interface MapProps {
   routes: Route[];
   selectedRoute: Route | null;
+  hoveredRoute: Route | null;
+  hoveredStopId: string | null;
+  hoveredCityStopIds: Set<string>;
   stopsMap: { [id: string]: Stop };
   onSelectRoute: (route: Route | null) => void;
   onSelectStop: (id: string) => void;
+  onHoverRoute: (route: Route | null) => void;
+  onHoverStop: (id: string | null) => void;
 }
 
 const MapEffect: React.FC<{ selectedRoute: Route | null, stopsMap: { [id: string]: Stop } }> = ({ selectedRoute, stopsMap }) => {
@@ -39,7 +47,7 @@ const MapEffect: React.FC<{ selectedRoute: Route | null, stopsMap: { [id: string
   return null;
 }
 
-const Map: React.FC<MapProps> = ({ routes, selectedRoute, stopsMap, onSelectRoute, onSelectStop }) => {
+const Map: React.FC<MapProps> = ({ routes, selectedRoute, hoveredRoute, hoveredStopId, hoveredCityStopIds, stopsMap, onSelectRoute, onSelectStop, onHoverRoute, onHoverStop }) => {
   return (
     <MapContainer 
       center={[50.0, 10.0]} 
@@ -61,7 +69,9 @@ const Map: React.FC<MapProps> = ({ routes, selectedRoute, stopsMap, onSelectRout
         
         if (positions.length < 2) return null;
 
-        const isSelected = selectedRoute?.id === route.id;
+        const isSelected = selectedRoute === route;
+        const isHoveredRoute = hoveredRoute === route;
+        const isHovered = isHoveredRoute;
         const routeKey = `${route.id}-${route.stops[0] || ''}-${route.stops[route.stops.length - 1] || ''}-${route.stops.length}-${index}`;
 
         return (
@@ -69,12 +79,14 @@ const Map: React.FC<MapProps> = ({ routes, selectedRoute, stopsMap, onSelectRout
             <Polyline
               positions={positions}
               eventHandlers={{
-                click: () => onSelectRoute(route)
+                click: () => onSelectRoute(route),
+                mouseover: () => onHoverRoute(route),
+                mouseout: () => onHoverRoute(null)
               }}
               pathOptions={{
-                color: '#72bf44',
+                color: FLIX_GREEN,
                 weight: isSelected ? 16 : 12,
-                opacity: 0.01,
+                opacity: 0,
                 lineJoin: 'round'
               }}
             />
@@ -82,9 +94,9 @@ const Map: React.FC<MapProps> = ({ routes, selectedRoute, stopsMap, onSelectRout
               positions={positions}
               interactive={false}
               pathOptions={{
-                color: '#72bf44',
-                weight: isSelected ? 6 : (selectedRoute ? 0.8 : 2.2),
-                opacity: isSelected ? 1 : (selectedRoute ? 0.15 : 0.5),
+                color: isSelected ? FLIX_GREEN : (isHovered ? HOVER_HIGHLIGHT : FLIX_GREEN),
+                weight: isSelected ? 6 : (isHovered ? 3.2 : (selectedRoute ? 0.6 : 1)),
+                opacity: isSelected ? 1 : (isHovered ? 1 : (selectedRoute ? 0.12 : 0.42)),
                 lineJoin: 'round'
               }}
             />
@@ -95,19 +107,59 @@ const Map: React.FC<MapProps> = ({ routes, selectedRoute, stopsMap, onSelectRout
       {selectedRoute?.stops.map(stopId => {
         const stop = stopsMap[stopId];
         if (!stop) return null;
+        const isHoveredStop = hoveredStopId === stopId;
         return (
           <Marker 
             key={stopId} 
             position={[stop.lat, stop.lon]} 
-            icon={dotIcon(true)}
+            icon={dotIcon(isHoveredStop)}
             eventHandlers={{
-                click: () => onSelectStop(stopId)
+                click: () => onSelectStop(stopId),
+                mouseover: () => onHoverStop(stopId),
+                mouseout: () => onHoverStop(null)
             }}
           >
             <Popup>{stop.name}</Popup>
           </Marker>
         );
       })}
+
+      {Array.from(hoveredCityStopIds).map((stopId) => {
+        const stop = stopsMap[stopId];
+        if (!stop) return null;
+        if (hoveredStopId === stopId) return null;
+        if (selectedRoute?.stops.includes(stopId)) return null;
+
+        return (
+          <Marker
+            key={`hover-city-${stopId}`}
+            position={[stop.lat, stop.lon]}
+            icon={dotIcon(true)}
+            eventHandlers={{
+              click: () => onSelectStop(stopId),
+              mouseover: () => onHoverStop(stopId),
+              mouseout: () => onHoverStop(null)
+            }}
+          >
+            <Popup>{stop.name}</Popup>
+          </Marker>
+        );
+      })}
+
+      {hoveredStopId && (!selectedRoute || !selectedRoute.stops.includes(hoveredStopId)) && stopsMap[hoveredStopId] && (
+        <Marker
+          key={`hovered-${hoveredStopId}`}
+          position={[stopsMap[hoveredStopId].lat, stopsMap[hoveredStopId].lon]}
+          icon={dotIcon(true)}
+          eventHandlers={{
+            click: () => onSelectStop(hoveredStopId),
+            mouseover: () => onHoverStop(hoveredStopId),
+            mouseout: () => onHoverStop(null)
+          }}
+        >
+          <Popup>{stopsMap[hoveredStopId].name}</Popup>
+        </Marker>
+      )}
 
       <MapEffect selectedRoute={selectedRoute} stopsMap={stopsMap} />
     </MapContainer>
