@@ -87,7 +87,7 @@ function App() {
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/flixbus_network.json')
+    fetch(`${import.meta.env.BASE_URL}flixbus_network.json`)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data: Network) => setNetwork(data))
       .catch(e => setNetworkError(e.message))
